@@ -118,11 +118,12 @@ cd spoke-widget
 # install UI deps
 npm --prefix ui install
 
-# dev (hot-reload)
+# dev (hot-reload) — run from the repo root so the `npm --prefix ui`
+# beforeBuildCommand resolves correctly.
 cargo install tauri-cli --version "^2.0" --locked
 cargo tauri dev
 
-# release bundle
+# release bundle — same: run from the repo root, not from src-tauri/.
 cargo tauri build
 ```
 
