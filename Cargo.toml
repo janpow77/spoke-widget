@@ -1,0 +1,18 @@
+[workspace]
+members = ["src-tauri"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+authors = ["Jan Riener <jan.riener@googlemail.com>"]
+license = "MIT"
+repository = "https://github.com/janpow77/spoke-widget"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
