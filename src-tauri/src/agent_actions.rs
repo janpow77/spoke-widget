@@ -15,7 +15,7 @@ fn build_client() -> Result<Client> {
         .context("building reqwest client")
 }
 
-fn authed<'a>(req: reqwest::RequestBuilder, cfg: &WidgetConfig) -> reqwest::RequestBuilder {
+fn authed(req: reqwest::RequestBuilder, cfg: &WidgetConfig) -> reqwest::RequestBuilder {
     match cfg.auth_token.as_deref() {
         Some(t) if !t.is_empty() => req.bearer_auth(t),
         _ => req,

@@ -43,6 +43,7 @@ impl UrlOpener for TauriShellOpener {
 
 /// Test-only opener that records every URL it was asked to open.
 #[cfg(test)]
+#[derive(Default)]
 pub struct MockOpener {
     pub calls: Mutex<Vec<String>>,
 }
@@ -50,9 +51,7 @@ pub struct MockOpener {
 #[cfg(test)]
 impl MockOpener {
     pub fn new() -> Self {
-        Self {
-            calls: Mutex::new(Vec::new()),
-        }
+        Self::default()
     }
 
     pub fn calls(&self) -> Vec<String> {
