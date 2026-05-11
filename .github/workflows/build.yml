@@ -101,8 +101,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          projectPath: .
-          tauriScript: cargo tauri
+          # `projectPath` points at the directory containing the Cargo
+          # crate; `tauri.conf.json` is auto-discovered next to it. This
+          # keeps the `beforeBuildCommand`'s `../ui` reference working.
+          projectPath: src-tauri
           args: --verbose
 
       - name: Upload artifacts

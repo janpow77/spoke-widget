@@ -119,9 +119,14 @@ fn build_menu(app: &AppHandle) -> Result<(Menu<Wry>, MenuItem<Wry>)> {
 
 /// Install the tray icon, wire menu events, and spawn a small task that
 /// reflects [`SpokeState`] transitions into the tray icon + label.
+///
+/// The `config` arc is currently unused inside this function (the menu
+/// handlers fish it out of `AppState` instead), but kept in the
+/// signature so that future per-state config lookups (e.g. dynamic
+/// tooltips) don't need a fresh wiring round.
 pub fn setup(
     app: &AppHandle,
-    config: Arc<RwLock<WidgetConfig>>,
+    _config: Arc<RwLock<WidgetConfig>>,
     poller: Arc<StatusPoller>,
 ) -> Result<()> {
     let (menu, status_item) = build_menu(app)?;
@@ -158,11 +163,14 @@ pub fn setup(
     // Spawn the state-reflector task. It runs on the tokio runtime created
     // by the Tauri builder.
     let app_handle = app.clone();
+    let tray_for_task = tray.clone();
+    let status_item_for_task = status_item.clone();
     let mut rx = poller.subscribe();
     tauri::async_runtime::spawn(async move {
         while rx.changed().await.is_ok() {
             let state = *rx.borrow();
-            if let Err(err) = apply_state(&app_handle, &tray, &status_item, state) {
+            if let Err(err) = apply_state(&app_handle, &tray_for_task, &status_item_for_task, state)
+            {
                 log::warn!("could not apply tray state: {err}");
             }
         }
@@ -245,10 +253,10 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
         ids::ABOUT => {
             use tauri_plugin_shell::ShellExt;
             #[allow(deprecated)]
-            if let Err(err) = app.shell().open(
-                "https://github.com/janpow77/spoke-widget",
-                None,
-            ) {
+            if let Err(err) = app
+                .shell()
+                .open("https://github.com/janpow77/spoke-widget", None)
+            {
                 log::error!("failed to open About URL: {err}");
             }
         }

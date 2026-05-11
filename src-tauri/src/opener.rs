@@ -4,6 +4,7 @@
 //! trait so unit tests can substitute a mock implementation.
 
 use anyhow::{Context, Result};
+#[cfg(test)]
 use std::sync::Mutex;
 
 /// Abstraction over "open an URL". Implemented by [`TauriShellOpener`] in
@@ -65,13 +66,6 @@ impl UrlOpener for MockOpener {
         self.calls.lock().unwrap().push(url.to_string());
         Ok(())
     }
-}
-
-// Silence unused-import warnings of `Mutex` for non-test builds, since we
-// only use it inside the `#[cfg(test)]` MockOpener above.
-#[allow(dead_code)]
-fn _unused_mutex_ref() -> Option<Mutex<()>> {
-    None
 }
 
 #[cfg(test)]

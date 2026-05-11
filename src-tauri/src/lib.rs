@@ -29,9 +29,35 @@ async fn get_config(state: tauri::State<'_, AppState>) -> Result<WidgetConfig, S
 #[tauri::command]
 async fn save_config(
     new_cfg: WidgetConfig,
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
 ) -> Result<(), String> {
     new_cfg.save().map_err(|e| e.to_string())?;
+
+    // Mirror the autostart preference to the OS *now* instead of only on
+    // the next launch. We intentionally swallow individual autostart
+    // errors so a failed registry / launch-agent write doesn't prevent
+    // the rest of the settings from being saved.
+    {
+        use tauri_plugin_autostart::ManagerExt;
+        let manager = app.autolaunch();
+        match manager.is_enabled() {
+            Ok(current) => {
+                let target = new_cfg.autostart;
+                if target && !current {
+                    if let Err(err) = manager.enable() {
+                        log::warn!("could not enable autostart: {err}");
+                    }
+                } else if !target && current {
+                    if let Err(err) = manager.disable() {
+                        log::warn!("could not disable autostart: {err}");
+                    }
+                }
+            }
+            Err(err) => log::warn!("autolaunch.is_enabled failed: {err}"),
+        }
+    }
+
     *state.config.write().await = new_cfg;
     Ok(())
 }
@@ -40,12 +66,7 @@ async fn save_config(
 async fn open_dashboard(app: tauri::AppHandle) -> Result<(), String> {
     use tauri::Manager;
     use tauri_plugin_shell::ShellExt;
-    let cfg = app
-        .state::<AppState>()
-        .config
-        .read()
-        .await
-        .clone();
+    let cfg = app.state::<AppState>().config.read().await.clone();
     #[allow(deprecated)]
     app.shell()
         .open(cfg.dashboard_url(), None)
@@ -111,8 +132,7 @@ pub fn run() {
             poller.clone().spawn();
 
             // Install tray.
-            tray::setup(&handle, config.clone(), poller.clone())
-                .context("setting up tray")?;
+            tray::setup(&handle, config.clone(), poller.clone()).context("setting up tray")?;
 
             Ok(())
         })

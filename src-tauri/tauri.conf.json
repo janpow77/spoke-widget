@@ -47,6 +47,13 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "resources": [
+      "icons/tray-green.png",
+      "icons/tray-yellow.png",
+      "icons/tray-red.png",
+      "icons/tray-grey.png",
+      "icons/tray-unknown.png"
+    ],
     "targets": "all",
     "linux": {
       "deb": {

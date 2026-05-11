@@ -63,8 +63,8 @@ impl WidgetConfig {
         if !p.exists() {
             return Ok(Self::default());
         }
-        let raw = fs::read_to_string(&p)
-            .with_context(|| format!("reading config {}", p.display()))?;
+        let raw =
+            fs::read_to_string(&p).with_context(|| format!("reading config {}", p.display()))?;
         let cfg: Self = serde_json::from_str(&raw)
             .with_context(|| format!("parsing config {}", p.display()))?;
         Ok(cfg)

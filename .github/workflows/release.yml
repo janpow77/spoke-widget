@@ -67,5 +67,4 @@ jobs:
             Artifacts are **unsigned** in this release — see README for OS-specific install notes.
           releaseDraft: false
           prerelease: false
-          projectPath: .
-          tauriScript: cargo tauri
+          projectPath: src-tauri

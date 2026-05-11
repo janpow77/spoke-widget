@@ -103,9 +103,7 @@ pub fn classify(status: &AgentStatusDto) -> SpokeState {
 ///
 /// Exposed for unit tests against `mockito`.
 pub async fn poll_once(client: &reqwest::Client, cfg: &WidgetConfig) -> SpokeState {
-    let mut req = client
-        .get(cfg.status_url())
-        .timeout(Duration::from_secs(2));
+    let mut req = client.get(cfg.status_url()).timeout(Duration::from_secs(2));
     if let Some(token) = &cfg.auth_token {
         if !token.is_empty() {
             req = req.bearer_auth(token);
