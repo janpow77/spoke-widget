@@ -1,0 +1,44 @@
+# Rust / Cargo
+/target/
+**/target/
+**/*.rs.bk
+Cargo.lock.bak
+
+# Tauri build output
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Node / pnpm
+node_modules/
+ui/dist/
+ui/.vite/
+.npm/
+.pnpm-store/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+dist/
+build/
+out/
+
+# Tauri specifics
+src-tauri/WixTools/
