@@ -9,14 +9,14 @@ written in **Tauri 2** (Rust + WebView). Runs on Linux, Windows and macOS.
 The widget is intentionally _thin_: it shows a single tray icon whose colour
 reflects the live status of your local Spoke-Stack and gives you one-click
 access to the spoke-agent dashboard. The full management UI continues to
-live inside the spoke-agent (`http://localhost:7700/admin/`).
+live inside the spoke-agent (`http://localhost:7844/admin/`).
 
 ## Architecture
 
 ```
 +----------------------+        HTTP polling          +-----------------+
 | spoke-widget (tray)  | --- GET  /api/status -----> | spoke-agent     |
-|  (Tauri 2 / Rust)    | --- POST /api/services/... |  :7700          |
+|  (Tauri 2 / Rust)    | --- POST /api/services/... |  :7844          |
 +----------------------+                              +--------+--------+
                                                               |
                                                               | registers
@@ -36,7 +36,7 @@ live inside the spoke-agent (`http://localhost:7700/admin/`).
   * grey — spoke-agent itself unreachable (network error, refused, timeout)
   * `?` — initial state, no poll completed yet
 * Left-click on the tray icon (or "Open Dashboard") opens
-  `http://localhost:7700/admin/` in the user's default browser.
+  `http://localhost:7844/admin/` in the user's default browser.
 
 ## Tray menu
 
@@ -58,7 +58,7 @@ Persisted to `~/.config/spoke-widget/config.json` (Linux),
 
 | Field                | Default                  | Description                              |
 | -------------------- | ------------------------ | ---------------------------------------- |
-| `agent_url`          | `http://localhost:7700`  | Spoke-Agent base URL.                    |
+| `agent_url`          | `http://localhost:7844`  | Spoke-Agent base URL.                    |
 | `auth_token`         | _(none)_                 | Optional bearer for `SPOKE_AGENT_AUTH_TOKEN`. |
 | `poll_interval_s`    | `30`                     | 10 / 30 / 60.                            |
 | `autostart`          | `true`                   | Launch on user login.                    |
@@ -158,7 +158,7 @@ The unit tests exercise:
 ## Troubleshooting
 
 * **Tray says "Agent unreachable"** — verify the spoke-agent is listening
-  on the URL configured in Settings (`curl http://localhost:7700/api/status`).
+  on the URL configured in Settings (`curl http://localhost:7844/api/status`).
   If the agent requires an auth token, set it in Settings.
 * **Tray icon doesn't appear on GNOME** — install the AppIndicator
   extension (see above).

@@ -12,7 +12,7 @@ interface WidgetConfig {
 }
 
 const cfg = reactive<WidgetConfig>({
-  agent_url: 'http://localhost:7700',
+  agent_url: 'http://localhost:7844',
   auth_token: '',
   poll_interval_s: 30,
   autostart: true,
