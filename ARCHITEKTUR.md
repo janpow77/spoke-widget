@@ -51,7 +51,7 @@ _Hohe Zentralität ist nicht automatisch ein Defekt (zentrale Stores/Modelle sin
 
 Passend zu Stack/Domäne dieses Projekts (Claude-Code-Agents/Skills):
 
-`/deutsche-formulierung`, `@git-workflow`, `/auto-verify`, `@e2e-browser-tester`, `/modern-gui-builder`, `/ux-completeness-check`, `/vue3-gui-builder`.
+`/deutsche-formulierung`, `@git-workflow`, `/auto-verify`, `@e2e-browser-tester`, `/modern-gui-builder`, `/ux-completeness-check`, `/vue3-gui-builder`, `@rust-expert`, `/understanding-tauri-architecture`, `/setting-up-tauri-projects`, `/understanding-tauri-ipc`, `/calling-rust-from-tauri-frontend`.
 
 ## Hinweis für Änderungen
 
