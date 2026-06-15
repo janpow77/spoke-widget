@@ -47,6 +47,12 @@ _Hohe Zentralität ist nicht automatisch ein Defekt (zentrale Stores/Modelle sin
 - `.new() (src-tauri/src/status_poller.rs)` — Betweenness 0.000
 - `windows (src-tauri/tauri.conf.json)` — Betweenness 0.000
 
+## Empfohlene Spezialisten
+
+Passend zu Stack/Domäne dieses Projekts (Claude-Code-Agents/Skills):
+
+`/deutsche-formulierung`, `@git-workflow`, `/auto-verify`, `@e2e-browser-tester`, `/modern-gui-builder`, `/ux-completeness-check`, `/vue3-gui-builder`.
+
 ## Hinweis für Änderungen
 
 Vor dem Ändern eines zentralen Bausteins die Abhängigen prüfen — am schnellsten über den **graphify-MCP** (globaler Graph): „Was hängt an `<datei>`?". Brücken-Knoten stabil halten.
