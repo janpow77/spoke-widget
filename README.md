@@ -1,144 +1,154 @@
 # spoke-widget
 
 [![build](https://github.com/janpow77/spoke-widget/actions/workflows/build.yml/badge.svg)](https://github.com/janpow77/spoke-widget/actions/workflows/build.yml)
+[![release](https://github.com/janpow77/spoke-widget/actions/workflows/release.yml/badge.svg)](https://github.com/janpow77/spoke-widget/actions/workflows/release.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Cross-platform system-tray frontend for the [spoke-agent](https://github.com/janpow77/spoke-agent),
-written in **Tauri 2** (Rust + WebView). Runs on Linux, Windows and macOS.
+**Plattformübergreifendes Tray-Widget (Tauri 2, Rust + WebView) für den [spoke-agent](https://github.com/janpow77/spoke-agent). Ein Tray-Symbol zeigt per Ampelfarbe den Zustand des lokalen [Spoke-Stacks](https://github.com/janpow77/spoke-stack) und öffnet mit einem Klick das Dashboard.**
 
-The widget is intentionally _thin_: it shows a single tray icon whose colour
-reflects the live status of your local Spoke-Stack and gives you one-click
-access to the spoke-agent dashboard. The full management UI continues to
-live inside the spoke-agent (`http://localhost:7700/admin/`).
+Das Widget ist bewusst schlank: Die eigentliche Verwaltungsoberfläche bleibt im spoke-agent (`http://localhost:7700/admin/`). Läuft unter Linux, Windows und macOS.
 
-## Architecture
+## Auf einen Blick
 
+- **Status ohne Fenster:** Das Tray-Symbol wechselt die Farbe je nach Router-Verbindung und Dienstzustand.
+- **Ein Klick zum Dashboard:** Linksklick öffnet `<agent>/admin/` im Standardbrowser.
+- **Schnellaktionen im Menü:** Spoke-Stack neu starten, Heartbeat pausieren.
+- **Kleines Einstellungsfenster (Vue 3):** Agent-URL, optionales Bearer-Token, Abfrageintervall, Autostart, Theme.
+- **Autostart** über `tauri-plugin-autostart` (LaunchAgent unter macOS, Registry-`Run` unter Windows, `.desktop`-Autostart unter Linux).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/settings-dark.png">
+  <img src="docs/assets/settings-light.png" alt="Einstellungsfenster des spoke-widget" width="480">
+</picture>
+
+## Architektur
+
+```mermaid
+flowchart LR
+    W["spoke-widget<br/>(Tauri 2 / Rust, Tray)"]
+    S["Einstellungsfenster<br/>(Vue 3)"]
+    A["spoke-agent<br/>:7700"]
+    R["llm-router<br/>:7100 / :7101"]
+    B["Standardbrowser<br/>/admin/"]
+    W -- "GET /api/status (Polling)" --> A
+    W -- "POST /api/services/…/restart<br/>DELETE /api/router/heartbeat" --> A
+    A -- "registriert sich" --> R
+    W -- "öffnet" --> B
+    S -- "invoke get_config / save_config" --> W
 ```
-+----------------------+        HTTP polling          +-----------------+
-| spoke-widget (tray)  | --- GET  /api/status -----> | spoke-agent     |
-|  (Tauri 2 / Rust)    | --- POST /api/services/... |  :7700          |
-+----------------------+                              +--------+--------+
-                                                              |
-                                                              | registers
-                                                              v
-                                                      +-----------------+
-                                                      |  llm-router     |
-                                                      |  :7100 / :7101  |
-                                                      +-----------------+
-```
 
-* The widget polls `GET /api/status` every 10/30/60 s (configurable).
-* `router.connected` plus the per-service `status` field drive the tray
-  icon colour:
-  * green — router connected and *all* discovered services healthy
-  * yellow — router connected but at least one service is degraded
-  * red — router not connected
-  * grey — spoke-agent itself unreachable (network error, refused, timeout)
-  * `?` — initial state, no poll completed yet
-* Left-click on the tray icon (or "Open Dashboard") opens
-  `http://localhost:7700/admin/` in the user's default browser.
+Das Widget fragt `GET /api/status` alle 10, 30 oder 60 Sekunden ab (Zeitlimit 2 s). `router.connected` und das Feld `status` je Dienst bestimmen die Farbe:
 
-## Tray menu
+| Farbe | Zustand | Bedeutung |
+| --- | --- | --- |
+| grün | Connected | Router verbunden, alle gefundenen Dienste `ok` |
+| gelb | Degraded | Router verbunden, mindestens ein Dienst nicht `ok` |
+| rot | Disconnected | Router nicht verbunden |
+| grau | Agent unreachable | spoke-agent nicht erreichbar (Netzfehler, abgewiesen, Zeitüberschreitung) |
+| `?` | Unknown | Startzustand, noch keine Abfrage abgeschlossen |
 
-| Item                  | Action                                                                |
-| --------------------- | --------------------------------------------------------------------- |
-| Open Dashboard        | Default action. Opens `<agent>/admin/` in the system browser.         |
-| Status: \<text\>      | Read-only info item, reflects the last poll result.                   |
-| Restart Spoke-Stack   | POST `<agent>/api/services/all/restart` (falls back per-service).     |
-| Pause Heartbeat       | DELETE `<agent>/api/router/heartbeat` (toggled).                      |
-| Settings…             | Opens a small Vue 3 settings window.                                  |
-| About…                | Opens this repo on GitHub.                                            |
-| Quit                  | Terminates the widget.                                                |
+## Schnellstart
 
-## Settings
-
-Persisted to `~/.config/spoke-widget/config.json` (Linux),
-`%APPDATA%\spoke-widget\config.json` (Windows) and
-`~/Library/Application Support/spoke-widget/config.json` (macOS).
-
-| Field                | Default                  | Description                              |
-| -------------------- | ------------------------ | ---------------------------------------- |
-| `agent_url`          | `http://localhost:7700`  | Spoke-Agent base URL.                    |
-| `auth_token`         | _(none)_                 | Optional bearer for `SPOKE_AGENT_AUTH_TOKEN`. |
-| `poll_interval_s`    | `30`                     | 10 / 30 / 60.                            |
-| `autostart`          | `true`                   | Launch on user login.                    |
-| `theme`              | `system`                 | `light` / `dark` / `system`.             |
-
-Auto-start is wired through `tauri-plugin-autostart`
-(LaunchAgent on macOS, Registry `Run` on Windows, `.desktop` autostart on Linux).
-
-## Install
-
-### Linux (Debian/Ubuntu)
+Fertige Pakete liegen unter [Releases](https://github.com/janpow77/spoke-widget/releases) (erzeugt vom Workflow `release.yml` bei Tags `v*`). Voraussetzung ist ein laufender spoke-agent unter `http://localhost:7700`.
 
 ```bash
+# Linux (Debian/Ubuntu)
 sudo apt install ./spoke-widget_0.1.0_amd64.deb
-```
 
-…or use the portable AppImage:
-
-```bash
+# oder portabel als AppImage
 chmod +x spoke-widget_0.1.0_amd64.AppImage
 ./spoke-widget_0.1.0_amd64.AppImage
+
+# Erreichbarkeit des Agents prüfen
+curl http://localhost:7700/api/status
 ```
 
-> On GNOME, you may need the
-> [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/)
-> extension for the tray icon to appear.
+Unter GNOME ist für das Tray-Symbol ggf. die Erweiterung [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/) nötig.
 
-### Windows
+<details>
+<summary><b>Windows und macOS</b></summary>
 
-Install the `spoke-widget_0.1.0_x64-setup.exe` or the `.msi`. The installer
-is **unsigned** in 0.x — Windows SmartScreen will warn; choose
-"More info" → "Run anyway". A signed build is planned for v1.0.
+**Windows:** `spoke-widget_0.1.0_x64-setup.exe` oder die `.msi` installieren. Der Installer ist in 0.x **nicht signiert**; SmartScreen warnt, dann „Weitere Informationen“ → „Trotzdem ausführen“. Ein signierter Build ist für v1.0 geplant.
 
-### macOS
-
-Mount `spoke-widget_0.1.0_aarch64.dmg` (or `_x86_64`) and drag the app to
-`/Applications`. The build is **unsigned and unnotarised**, so the first
-launch requires:
+**macOS:** `spoke-widget_0.1.0_aarch64.dmg` (oder `_x86_64`) einhängen und die App nach `/Applications` ziehen. Der Build ist **weder signiert noch notarisiert**, daher vor dem ersten Start:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/Spoke\ Widget.app
 ```
 
-## Build from source
+</details>
 
-Requirements:
+<details>
+<summary><b>Tray-Menü</b></summary>
 
-* Rust **1.77+** (Tauri 2 minimum)
-* Node **18+** (for the optional Vue settings UI)
-* Platform build deps — Tauri lists them per OS:
-  [https://v2.tauri.app/start/prerequisites/](https://v2.tauri.app/start/prerequisites/)
+| Eintrag | Wirkung |
+| --- | --- |
+| Open Dashboard | Standardaktion (auch Linksklick). Öffnet `<agent>/admin/` im Systembrowser. |
+| Status: \<Text\> | Nur Anzeige, zeigt das Ergebnis der letzten Abfrage. |
+| Restart Spoke-Stack | `POST <agent>/api/services/all/restart`; bei 404 Rückfall auf Neustart je Dienst. |
+| Pause Heartbeat | `DELETE <agent>/api/router/heartbeat` (Umschalter). |
+| Settings… | Öffnet das Einstellungsfenster. |
+| About… | Öffnet dieses Repository auf GitHub. |
+| Quit | Beendet das Widget. |
+
+</details>
+
+<details>
+<summary><b>Konfiguration</b></summary>
+
+Gespeichert als JSON unter
+
+- Linux: `~/.config/spoke-widget/config.json`
+- Windows: `%APPDATA%\spoke-widget\config.json`
+- macOS: `~/Library/Application Support/spoke-widget/config.json`
+
+| Feld | Standard | Beschreibung |
+| --- | --- | --- |
+| `agent_url` | `http://localhost:7700` | Basis-URL des spoke-agent |
+| `auth_token` | _(leer)_ | Optionales Bearer-Token (entspricht `SPOKE_AGENT_AUTH_TOKEN` des Agents) |
+| `poll_interval_s` | `30` | 10 / 30 / 60 |
+| `autostart` | `true` | Start bei der Benutzeranmeldung |
+| `theme` | `system` | `light` / `dark` / `system` |
+
+</details>
+
+<details>
+<summary><b>Aus dem Quellcode bauen</b></summary>
+
+Voraussetzungen:
+
+- Rust **1.77+** (Mindestversion für Tauri 2)
+- Node **18+** (für die Vue-Einstellungsoberfläche)
+- Plattformabhängige Build-Abhängigkeiten laut [Tauri-Voraussetzungen](https://v2.tauri.app/start/prerequisites/)
 
 ```bash
 git clone https://github.com/janpow77/spoke-widget
 cd spoke-widget
 
-# install UI deps
+# UI-Abhängigkeiten installieren
 npm --prefix ui install
 
-# dev (hot-reload) — run from the repo root so the `npm --prefix ui`
-# beforeBuildCommand resolves correctly.
+# Entwicklung mit Hot-Reload – aus dem Repo-Wurzelverzeichnis starten,
+# damit der beforeDevCommand `npm --prefix ui run dev` aufgelöst wird.
 cargo install tauri-cli --version "^2.0" --locked
 cargo tauri dev
 
-# release bundle — same: run from the repo root, not from src-tauri/.
+# Release-Bundle – ebenfalls aus dem Wurzelverzeichnis, nicht aus src-tauri/
 cargo tauri build
 ```
 
-The release artefacts land under `src-tauri/target/release/bundle/`.
+Die Pakete liegen danach unter `src-tauri/target/release/bundle/`.
 
-### Regenerating the icons
-
-The bundled tray + app icons are generated by `scripts/gen_icons.py`
-(needs Python 3 + Pillow). Re-run after changing colours:
+**Symbole neu erzeugen:** Tray- und App-Symbole entstehen mit `scripts/gen_icons.py` (Python 3 + Pillow). Nach Farbänderungen erneut ausführen:
 
 ```bash
 python3 scripts/gen_icons.py
 ```
 
-## Testing
+</details>
+
+<details>
+<summary><b>Tests</b></summary>
 
 ```bash
 cd src-tauri
@@ -147,36 +157,42 @@ cargo clippy --all-targets -- -D warnings
 cargo test --all
 ```
 
-The unit tests exercise:
+Die Unit-Tests decken ab:
 
-* The `SpokeState` classifier (router-up + services-mix combinations).
-* The `status_poller` HTTP layer (against `mockito`).
-* The `restart_all` fallback to per-service restarts on 404.
-* The bearer-token plumbing.
-* The `MockOpener` (proxy for the production `tauri-plugin-shell` opener).
+- den `SpokeState`-Klassifizierer (Kombinationen aus Router-Status und Dienstzuständen),
+- die HTTP-Schicht von `status_poller` (gegen `mockito`),
+- den Rückfall von `restart_all` auf Neustarts je Dienst bei 404,
+- die Weitergabe des Bearer-Tokens,
+- den `MockOpener` (Stellvertreter für den produktiven Opener aus `tauri-plugin-shell`).
 
-## Troubleshooting
+Dieselben drei Befehle laufen in der CI ([build.yml](.github/workflows/build.yml)), dazu ein Bundle-Build für Linux, Windows und macOS.
 
-* **Tray says "Agent unreachable"** — verify the spoke-agent is listening
-  on the URL configured in Settings (`curl http://localhost:7700/api/status`).
-  If the agent requires an auth token, set it in Settings.
-* **Tray icon doesn't appear on GNOME** — install the AppIndicator
-  extension (see above).
-* **`Restart Spoke-Stack` fails with 404** — the widget will fall back to
-  looping over `/api/services/{name}/restart`. If that also 404s, your
-  spoke-agent is older than the widget expects.
-* **Heartbeat-toggle menu greyed-out / errors** — the
-  `DELETE /api/router/heartbeat` endpoint is part of the spoke-agent
-  roadmap but not yet shipped in every release; the widget reports a
-  clear error if it's missing.
+</details>
 
-## Roadmap
+<details>
+<summary><b>Fehlerbehebung</b></summary>
 
-* v0.2: signed builds (macOS notarisation + Windows code-signing) and
-  a built-in updater (`tauri-plugin-updater`).
-* v0.3: richer per-service tray submenu (logs tail, individual restart).
-* v0.4: tray badge with GPU memory used (from `discovery.gpu`).
+- **Tray zeigt „Agent unreachable“:** Prüfen, ob der spoke-agent unter der eingestellten URL lauscht (`curl http://localhost:7700/api/status`). Verlangt der Agent ein Token, dieses in den Einstellungen eintragen.
+- **Tray-Symbol erscheint unter GNOME nicht:** AppIndicator-Erweiterung installieren (siehe Schnellstart).
+- **„Restart Spoke-Stack“ scheitert mit 404:** Das Widget fällt auf `/api/services/{name}/restart` je Dienst zurück. Liefert auch das 404, ist der spoke-agent älter, als das Widget erwartet.
+- **Heartbeat-Umschalter meldet Fehler:** Der Endpunkt `DELETE /api/router/heartbeat` steht auf der Roadmap des spoke-agent, ist aber nicht in jeder Version enthalten; das Widget meldet dann einen eindeutigen Fehler.
 
-## License
+</details>
+
+<details>
+<summary><b>Roadmap</b></summary>
+
+- v0.2: signierte Builds (macOS-Notarisierung, Windows-Codesignatur) und eingebauter Updater (`tauri-plugin-updater`).
+- v0.3: ausführlicheres Untermenü je Dienst (Log-Ende, einzelner Neustart).
+- v0.4: Tray-Badge mit belegtem GPU-Speicher (aus `discovery.gpu`).
+
+</details>
+
+## Verwandte Projekte
+
+- [spoke-agent](https://github.com/janpow77/spoke-agent) – Dienst, den das Widget abfragt und steuert
+- [spoke-stack](https://github.com/janpow77/spoke-stack) – der lokale Stack, dessen Zustand angezeigt wird
+
+## Lizenz
 
 [MIT](LICENSE) © 2026 Jan Riener
