@@ -112,7 +112,7 @@ mod tests {
     #[test]
     fn roundtrip_serde() {
         let cfg = WidgetConfig {
-            agent_url: "http://nuc.local:7700".into(),
+            agent_url: "http://spoke.example:7700".into(),
             auth_token: Some("secret".into()),
             poll_interval_s: 60,
             autostart: false,
