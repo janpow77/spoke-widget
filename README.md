@@ -6,7 +6,7 @@
 
 **Plattformübergreifendes Tray-Widget (Tauri 2, Rust + WebView) für den [spoke-agent](https://github.com/janpow77/spoke-agent). Ein Tray-Symbol zeigt per Ampelfarbe den Zustand des lokalen [Spoke-Stacks](https://github.com/janpow77/spoke-stack) und öffnet mit einem Klick das Dashboard.**
 
-Das Widget ist bewusst schlank: Die eigentliche Verwaltungsoberfläche bleibt im spoke-agent (`http://localhost:7700/admin/`). Läuft unter Linux, Windows und macOS.
+Das Widget ist bewusst schlank: Die eigentliche Verwaltungsoberfläche bleibt im spoke-agent (`http://localhost:7844/admin/`). Läuft unter Linux, Windows und macOS.
 
 ## Auf einen Blick
 
@@ -27,7 +27,7 @@ Das Widget ist bewusst schlank: Die eigentliche Verwaltungsoberfläche bleibt im
 flowchart LR
     W["spoke-widget<br/>(Tauri 2 / Rust, Tray)"]
     S["Einstellungsfenster<br/>(Vue 3)"]
-    A["spoke-agent<br/>:7700"]
+    A["spoke-agent<br/>:7844"]
     R["llm-router<br/>:7100 / :7101"]
     B["Standardbrowser<br/>/admin/"]
     W -- "GET /api/status (Polling)" --> A
@@ -49,7 +49,7 @@ Das Widget fragt `GET /api/status` alle 10, 30 oder 60 Sekunden ab (Zeitlimit 2 
 
 ## Schnellstart
 
-Fertige Pakete liegen unter [Releases](https://github.com/janpow77/spoke-widget/releases) (erzeugt vom Workflow `release.yml` bei Tags `v*`). Voraussetzung ist ein laufender spoke-agent unter `http://localhost:7700`.
+Fertige Pakete liegen unter [Releases](https://github.com/janpow77/spoke-widget/releases) (erzeugt vom Workflow `release.yml` bei Tags `v*`). Voraussetzung ist ein laufender spoke-agent unter `http://localhost:7844`.
 
 ```bash
 # Linux (Debian/Ubuntu)
@@ -60,7 +60,7 @@ chmod +x spoke-widget_0.1.0_amd64.AppImage
 ./spoke-widget_0.1.0_amd64.AppImage
 
 # Erreichbarkeit des Agents prüfen
-curl http://localhost:7700/api/status
+curl http://localhost:7844/api/status
 ```
 
 Unter GNOME ist für das Tray-Symbol ggf. die Erweiterung [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/) nötig.
@@ -104,7 +104,7 @@ Gespeichert als JSON unter
 
 | Feld | Standard | Beschreibung |
 | --- | --- | --- |
-| `agent_url` | `http://localhost:7700` | Basis-URL des spoke-agent |
+| `agent_url` | `http://localhost:7844` | Basis-URL des spoke-agent |
 | `auth_token` | _(leer)_ | Optionales Bearer-Token (entspricht `SPOKE_AGENT_AUTH_TOKEN` des Agents) |
 | `poll_interval_s` | `30` | 10 / 30 / 60 |
 | `autostart` | `true` | Start bei der Benutzeranmeldung |
@@ -172,7 +172,7 @@ Dieselben drei Befehle laufen in der CI ([build.yml](.github/workflows/build.yml
 <details>
 <summary><b>Fehlerbehebung</b></summary>
 
-- **Tray zeigt „Agent unreachable“:** Prüfen, ob der spoke-agent unter der eingestellten URL lauscht (`curl http://localhost:7700/api/status`). Verlangt der Agent ein Token, dieses in den Einstellungen eintragen.
+- **Tray zeigt „Agent unreachable“:** Prüfen, ob der spoke-agent unter der eingestellten URL lauscht (`curl http://localhost:7844/api/status`). Verlangt der Agent ein Token, dieses in den Einstellungen eintragen.
 - **Tray-Symbol erscheint unter GNOME nicht:** AppIndicator-Erweiterung installieren (siehe Schnellstart).
 - **„Restart Spoke-Stack“ scheitert mit 404:** Das Widget fällt auf `/api/services/{name}/restart` je Dienst zurück. Liefert auch das 404, ist der spoke-agent älter, als das Widget erwartet.
 - **Heartbeat-Umschalter meldet Fehler:** Der Endpunkt `DELETE /api/router/heartbeat` steht auf der Roadmap des spoke-agent, ist aber nicht in jeder Version enthalten; das Widget meldet dann einen eindeutigen Fehler.
