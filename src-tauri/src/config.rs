@@ -36,7 +36,7 @@ pub struct WidgetConfig {
 impl Default for WidgetConfig {
     fn default() -> Self {
         Self {
-            agent_url: "http://localhost:7700".to_string(),
+            agent_url: "http://localhost:7844".to_string(),
             auth_token: None,
             poll_interval_s: 30,
             autostart: true,
@@ -95,24 +95,24 @@ mod tests {
     #[test]
     fn default_urls_are_well_formed() {
         let cfg = WidgetConfig::default();
-        assert_eq!(cfg.status_url(), "http://localhost:7700/api/status");
-        assert_eq!(cfg.dashboard_url(), "http://localhost:7700/admin/");
+        assert_eq!(cfg.status_url(), "http://localhost:7844/api/status");
+        assert_eq!(cfg.dashboard_url(), "http://localhost:7844/admin/");
     }
 
     #[test]
     fn trailing_slash_is_normalised() {
         let cfg = WidgetConfig {
-            agent_url: "http://example.com:7700/".into(),
+            agent_url: "http://example.com:7844/".into(),
             ..WidgetConfig::default()
         };
-        assert_eq!(cfg.status_url(), "http://example.com:7700/api/status");
-        assert_eq!(cfg.dashboard_url(), "http://example.com:7700/admin/");
+        assert_eq!(cfg.status_url(), "http://example.com:7844/api/status");
+        assert_eq!(cfg.dashboard_url(), "http://example.com:7844/admin/");
     }
 
     #[test]
     fn roundtrip_serde() {
         let cfg = WidgetConfig {
-            agent_url: "http://nuc.local:7700".into(),
+            agent_url: "http://spoke.example:7844".into(),
             auth_token: Some("secret".into()),
             poll_interval_s: 60,
             autostart: false,

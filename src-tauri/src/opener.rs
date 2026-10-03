@@ -74,11 +74,11 @@ mod tests {
     #[test]
     fn mock_opener_records_calls() {
         let m = MockOpener::new();
-        m.open("http://localhost:7700/admin/").unwrap();
+        m.open("http://localhost:7844/admin/").unwrap();
         m.open("https://github.com/janpow77/spoke-widget").unwrap();
         let calls = m.calls();
         assert_eq!(calls.len(), 2);
-        assert_eq!(calls[0], "http://localhost:7700/admin/");
+        assert_eq!(calls[0], "http://localhost:7844/admin/");
         assert!(calls[1].starts_with("https://github.com"));
     }
 }
